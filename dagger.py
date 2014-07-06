@@ -4,7 +4,7 @@ from Elfparsing import Elf
 import distorm3
 import sys
 import optparse
-
+import re
 
 def main():
 	print "Welcome to DAGger"
@@ -48,32 +48,23 @@ def main():
 		
 		data = "".join(map(chr,section_text))
 		offset = binary.getSymbolAddrByName("_start")
-		print "Entry point: " + str(hex(offset))
+		print "Entry point: " + str(offset)
 		
 		iterable = distorm3.DecodeGenerator(offset, data, options.dt)
 		# Print each decoded instruction
+		p = re.compile('0x[0-9a-f]+')
 		for (offset, size, instruction, hexdump) in iterable:
-			if instruction.startswith("CALL"):
-				tokens = instruction.split(" ")
-				addr = tokens[1].strip()
-				try:
-					addr = int(addr,16)
-				except ValueError:
-					continue
-				name = binary.getSymbolNameByAddr(addr)
-				if name != None:
-					instruction = "CALL " + name
-				
-			elif instruction.startswith("PUSH DWORD"):
-				tokens = instruction.split(" ")
-				addr = tokens[2].strip()
-				try:
-					addr = int(addr,16)
-				except ValueError:
-					continue
-				name = binary.getSymbolNameByAddr(addr)
-				if name != None:
-					instruction = "PUSH DWORD " + name
+			tokens = p.findall(instruction)
+			try:
+				if len(tokens) == 1:
+					token = tokens[0]
+					if len(token) > 6:
+						addr = int(token,16)
+						name = binary.getSymbolNameByAddr(addr)
+						if name != None:
+							instruction = instruction.replace(token,name)
+			except ValueError:
+				print ""
 			if binary.getSymbolNameByAddr(offset) != None:
 				offset = binary.getSymbolNameByAddr(offset)
 				print("%s:" %(offset))
