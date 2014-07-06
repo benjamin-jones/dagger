@@ -11,9 +11,10 @@ if __name__=="__main__":
 		exit(-1)
 
 	fp = open(filename)
-	p = re.compile('\<[_0-9a-zA-Z@]+\>:')
-	p2 = re.compile('\<[_0-9a-zA-Z@]+\>[^ :]')
+	p = re.compile('\<[\-\._0-9a-zA-Z@]+\>:')
+	p2 = re.compile('\<[\-\._0-9a-zA-Z@]+\>[^ :]')
 	symbols = {}
+	current_function = ""
 	for line in fp:
 		m = p.findall(line)
 		if len(m) == 1:
@@ -22,7 +23,8 @@ if __name__=="__main__":
 		m2 = p2.findall(line)
 		if len(m2) == 1:
 			current_symbol = m2[0].strip().strip("<").strip(">")
-			symbols[current_function].append(current_symbol)
+			if current_function != "":
+				symbols[current_function].append(current_symbol)
 	
 	for symbol in symbols:
 		print symbol + ":"
